@@ -5,6 +5,7 @@ import {
   addItem,
   deleteItemById,
   updateItemById,
+  searchItems,
 } from "./database.js";
 
 const app = express();
@@ -12,7 +13,11 @@ app.use(express.json());
 
 app.get("/:tableName", async (req, res) => {
   const tableName = req.params.tableName;
-  const items = await getItems(tableName);
+
+  const query = req.query.q;
+  const items = query
+    ? await searchItems(tableName, query)
+    : await getItems(tableName);
   res.send(items);
 });
 
@@ -48,6 +53,13 @@ app.put("/:tableName/:id", async (req, res) => {
   const updatedFields = req.body;
   const item = await updateItemById(tableName, id, updatedFields);
   res.status(200).send(item);
+});
+
+app.post("/:tableName/filter", async (req, res) => {
+  const tableName = req.params.tableName;
+  const filters = req.body.filters || [];
+  const items = await getItemsWithFilters(tableName, filters);
+  res.send(items);
 });
 
 app.use((err, req, res, next) => {
