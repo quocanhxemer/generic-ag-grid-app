@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import {
   getItemById,
   getItems,
@@ -10,6 +11,12 @@ import {
 
 const app = express();
 app.use(express.json());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  }),
+);
 
 app.get("/:tableName", async (req, res) => {
   const tableName = req.params.tableName;
