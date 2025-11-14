@@ -1,5 +1,11 @@
 import express from "express";
-import { getItemById, getItems, addItem } from "./database.js";
+import {
+  getItemById,
+  getItems,
+  addItem,
+  deleteItemById,
+  updateItemById,
+} from "./database.js";
 
 const app = express();
 app.use(express.json());
@@ -14,14 +20,34 @@ app.get("/:tableName/:id", async (req, res) => {
   const tableName = req.params.tableName;
   const id = req.params.id;
   const item = await getItemById(tableName, id);
+
+  if (!item) {
+    return res.status(404).send({ error: "Item not found" });
+  }
+
   res.send(item);
 });
 
-app.post("/:tableName", express.json(), async (req, res) => {
+app.post("/:tableName", async (req, res) => {
   const tableName = req.params.tableName;
   const newItem = req.body;
-  const insertId = await addItem(tableName, newItem);
-  res.status(201).send({ id: insertId });
+  const item = await addItem(tableName, newItem);
+  res.status(201).send(item);
+});
+
+app.delete("/:tableName/:id", async (req, res) => {
+  const tableName = req.params.tableName;
+  const id = req.params.id;
+  await deleteItemById(tableName, id);
+  res.status(204).send();
+});
+
+app.put("/:tableName/:id", async (req, res) => {
+  const tableName = req.params.tableName;
+  const id = req.params.id;
+  const updatedFields = req.body;
+  const item = await updateItemById(tableName, id, updatedFields);
+  res.status(200).send(item);
 });
 
 app.use((err, req, res, next) => {
