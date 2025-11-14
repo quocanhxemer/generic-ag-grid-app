@@ -80,66 +80,65 @@ const getColumnNames = async (tableName) => {
   return cols;
 };
 
-export const searchItems = async (tableName, searchTerm) => {
-  const likeTerm = `%${searchTerm}%`;
-
-  const columns = (await getColumnNames(tableName)).join(", ");
-
-  const [items] = await pool.query(
-    `SELECT * FROM ?? WHERE CONCAT_WS(' ', ${columns}) LIKE ?`,
-    [tableName, likeTerm],
-  );
-  return items;
-};
-
 const isValidColumn = async (tableName, column) => {
   const columns = await getColumnNames(tableName);
   return columns.includes(`\`${column}\``);
 };
 
-export const filterItemInColumn = async (tableName, filters) => {
-  // filters in form [{column, operation, value}, ...]
+export const queryItems = async (
+  tableName,
+  option = { search: "", filters: [] },
+) => {
+  // option.filters in form [{column, operation, value}, ...]
   const whereClauses = [];
   const values = [];
-  for (const filter of filters) {
-    // Validate column name - against maybe SQL injection
-    if (!(await isValidColumn(tableName, filter.column))) {
-      throw new Error(`Invalid column name: ${filter.column}`);
-    }
+  if (option.filters) {
+    for (const filter of option.filters) {
+      // Validate column name - against maybe SQL injection
+      if (!(await isValidColumn(tableName, filter.column))) {
+        throw new Error(`Invalid column name: ${filter.column}`);
+      }
 
-    switch (filter.operation) {
-      case "contains":
-        whereClauses.push(`\`${filter.column}\` LIKE ?`);
-        values.push(`%${filter.value}%`);
-        break;
-      case "equals":
-        whereClauses.push(`\`${filter.column}\` = ?`);
-        values.push(filter.value);
-        break;
-      case "starts_with":
-        whereClauses.push(`\`${filter.column}\` LIKE ?`);
-        values.push(`${filter.value}%`);
-        break;
-      case "ends_with":
-        whereClauses.push(`\`${filter.column}\` LIKE ?`);
-        values.push(`%${filter.value}`);
-        break;
-      case "is_empty":
-        whereClauses.push(
-          `(\`${filter.column}\` IS NULL OR \`${filter.column}\` = '')`,
-        );
-        break;
-      case "greater_than":
-        whereClauses.push(`\`${filter.column}\` > ?`);
-        values.push(filter.value);
-        break;
-      case "less_than":
-        whereClauses.push(`\`${filter.column}\` < ?`);
-        values.push(filter.value);
-        break;
-      default:
-        throw new Error(`Unsupported operation: ${filter.operation}`);
+      switch (filter.operation) {
+        case "contains":
+          whereClauses.push(`\`${filter.column}\` LIKE ?`);
+          values.push(`%${filter.value}%`);
+          break;
+        case "equals":
+          whereClauses.push(`\`${filter.column}\` = ?`);
+          values.push(filter.value);
+          break;
+        case "starts_with":
+          whereClauses.push(`\`${filter.column}\` LIKE ?`);
+          values.push(`${filter.value}%`);
+          break;
+        case "ends_with":
+          whereClauses.push(`\`${filter.column}\` LIKE ?`);
+          values.push(`%${filter.value}`);
+          break;
+        case "is_empty":
+          whereClauses.push(
+            `(\`${filter.column}\` IS NULL OR \`${filter.column}\` = '')`,
+          );
+          break;
+        case "greater_than":
+          whereClauses.push(`\`${filter.column}\` > ?`);
+          values.push(filter.value);
+          break;
+        case "less_than":
+          whereClauses.push(`\`${filter.column}\` < ?`);
+          values.push(filter.value);
+          break;
+        default:
+          throw new Error(`Unsupported operation: ${filter.operation}`);
+      }
     }
+  }
+
+  if (option.search) {
+    const searchColumns = (await getColumnNames(tableName)).join(", ");
+    whereClauses.push(`CONCAT_WS(' ', ${searchColumns}) LIKE ?`);
+    values.push(`%${option.search}%`);
   }
 
   const whereClause = whereClauses.length
