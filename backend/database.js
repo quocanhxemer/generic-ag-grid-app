@@ -1,5 +1,11 @@
 import mysql from "mysql2/promise";
 
+import {
+  isValidColumn,
+  getColumnNames,
+  getWhereClause,
+} from "./utils/index.js";
+
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -67,76 +73,55 @@ export const addItem = async (tableName, newItem) => {
   return getItemById(tableName, result.insertId);
 };
 
-const columnsName = new Map();
-
-const getColumnNames = async (tableName) => {
-  if (columnsName.has(tableName)) {
-    return columnsName.get(tableName);
-  }
-
-  const [columnsData] = await pool.query(`SHOW COLUMNS FROM ??`, [tableName]);
-  const cols = columnsData.map((c) => `\`${c.Field}\``);
-  columnsName.set(tableName, cols);
-  return cols;
-};
-
-const isValidColumn = async (tableName, column) => {
-  const columns = await getColumnNames(tableName);
-  return columns.includes(`\`${column}\``);
-};
-
 export const queryItems = async (
   tableName,
-  option = { search: "", filters: [] },
+  option = { search: "", filters: {} },
 ) => {
-  // option.filters in form [{column, operation, value}, ...]
+  // Option.filters in form a Map from column to { filterType, type, filter }
+  // OR: to { filterType, operator, conditions: [ { filterType, type, filter }, ... ] }
+  // From the IDatasource interface https://www.ag-grid.com/react-data-grid/infinite-scrolling
+  // Don't need filterType for now ¯\(o_o)/¯
   const whereClauses = [];
   const values = [];
   if (option.filters) {
-    for (const filter of option.filters) {
+    for (const col of Object.keys(option.filters)) {
       // Validate column name - against maybe SQL injection
-      if (!(await isValidColumn(tableName, filter.column))) {
-        throw new Error(`Invalid column name: ${filter.column}`);
+      if (!(await isValidColumn(tableName, col, pool))) {
+        throw new Error(`Invalid column name: ${col}`);
       }
 
-      switch (filter.operation) {
-        case "contains":
-          whereClauses.push(`\`${filter.column}\` LIKE ?`);
-          values.push(`%${filter.value}%`);
-          break;
-        case "equals":
-          whereClauses.push(`\`${filter.column}\` = ?`);
-          values.push(filter.value);
-          break;
-        case "starts_with":
-          whereClauses.push(`\`${filter.column}\` LIKE ?`);
-          values.push(`${filter.value}%`);
-          break;
-        case "ends_with":
-          whereClauses.push(`\`${filter.column}\` LIKE ?`);
-          values.push(`%${filter.value}`);
-          break;
-        case "is_empty":
-          whereClauses.push(
-            `(\`${filter.column}\` IS NULL OR \`${filter.column}\` = '')`,
-          );
-          break;
-        case "greater_than":
-          whereClauses.push(`\`${filter.column}\` > ?`);
-          values.push(filter.value);
-          break;
-        case "less_than":
-          whereClauses.push(`\`${filter.column}\` < ?`);
-          values.push(filter.value);
-          break;
-        default:
-          throw new Error(`Unsupported operation: ${filter.operation}`);
+      const filter = option.filters[col];
+
+      if (filter.conditions) {
+        if (filter.operator !== "AND" && filter.operator !== "OR") {
+          throw new Error(`Unsupported operator: ${filter.operator}`);
+        }
+
+        const conditionClauses = [];
+        for (const condition of filter.conditions) {
+          const [clause, val] = getWhereClause(condition, col);
+          conditionClauses.push(clause);
+          if (val !== undefined) {
+            values.push(val);
+          }
+        }
+
+        whereClauses.push(
+          "(" + conditionClauses.join(` ${filter.operator} `) + ")",
+        );
+        continue;
+      }
+
+      const [clause, val] = getWhereClause(filter, col);
+      whereClauses.push(clause);
+      if (val !== undefined) {
+        values.push(val);
       }
     }
   }
 
   if (option.search) {
-    const searchColumns = (await getColumnNames(tableName)).join(", ");
+    const searchColumns = (await getColumnNames(tableName, pool)).join(", ");
     whereClauses.push(`CONCAT_WS(' ', ${searchColumns}) LIKE ?`);
     values.push(`%${option.search}%`);
   }
