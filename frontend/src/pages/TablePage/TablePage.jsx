@@ -1,26 +1,25 @@
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 
-import requests from "../../utils/requests";
+import { deleteItem, getItems } from "../../utils/requests";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 export default function TablePage() {
   const navigate = useNavigate();
 
-  const [rowData, setRowData] = useState([]);
   const [columnDefs, setColumnDefs] = useState([]);
 
   const { tableName } = useParams();
 
-  const loadTableData = useCallback(
-    async (params = {}) => {
+  useEffect(() => {
+    const loadColumnsNames = async () => {
       try {
-        const response = await requests.get(`/${tableName}`);
-        const data = response.data;
+        // Get 1 row to determine columns
+        const data = await getItems(tableName, { offset: 0, limit: 1 });
 
         if (data.length > 0) {
           const columns = Object.keys(data[0]).map((key) => ({
@@ -30,24 +29,71 @@ export default function TablePage() {
             filter: true,
             resizable: true,
           }));
+          columns.push({
+            headerName: "Actions",
+            field: "actions",
+            cellRenderer: (params) => (
+              <div>
+                <button
+                  onClick={() => navigate(`/${tableName}/${params.data.id}`)}
+                >
+                  View
+                </button>
+                <button
+                  onClick={async () => {
+                    await deleteItem(tableName, params.data.id);
+                    params.api.refreshInfiniteCache();
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            ),
+          });
           setColumnDefs(columns);
         }
-
-        setRowData(data);
       } catch (error) {
         console.error("Error loading table data:", error);
       }
-    },
-    [tableName, navigate],
-  );
+    };
+    loadColumnsNames();
+  }, [tableName, navigate]);
 
-  useEffect(() => {
-    loadTableData();
-  }, [loadTableData]);
+  const datasource = useMemo(
+    () => ({
+      getRows: async (rowParams) => {
+        const { startRow, endRow, filterModel, sortModel } = rowParams;
+        const pageSize = endRow - startRow;
+
+        const requestParams = {
+          offset: startRow,
+          limit: pageSize,
+          filters: filterModel,
+          sort: sortModel,
+        };
+
+        try {
+          const data = await getItems(tableName, requestParams);
+          rowParams.successCallback(
+            data,
+            data.length < pageSize ? startRow + data.length : -1,
+          );
+        } catch (error) {
+          console.error("Error fetching rows:", error);
+          rowParams.failCallback();
+        }
+      },
+    }),
+    [tableName],
+  );
 
   return (
     <div style={{ width: "100%", height: "100%" }}>
-      <AgGridReact rowData={rowData} columnDefs={columnDefs} />
+      <AgGridReact
+        columnDefs={columnDefs}
+        rowModelType="infinite"
+        datasource={datasource}
+      />
     </div>
   );
 }
