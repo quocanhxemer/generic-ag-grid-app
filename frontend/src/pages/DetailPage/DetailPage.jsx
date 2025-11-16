@@ -23,8 +23,8 @@ export default function DetailPage() {
   const navigate = useNavigate();
 
   const [item, setItem] = useState(null);
+  const [oldItem, setOldItem] = useState(null);
   const [editMode, setEditMode] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -43,12 +43,21 @@ export default function DetailPage() {
   }
 
   const handleEdit = () => {
+    setOldItem(item);
     setEditMode(true);
-    setHasChanges(false);
   };
 
   const handleSave = () => {
-    updateItemById(tableName, id, item);
+    const saveChanges = async () => {
+      try {
+        const updatedItem = await updateItemById(tableName, id, item);
+        setItem(updatedItem);
+      } catch (error) {
+        setItem(oldItem);
+        alert("Failed to save changes :(");
+      }
+    };
+    saveChanges();
     setEditMode(false);
   };
 
@@ -68,25 +77,26 @@ export default function DetailPage() {
       </Typography>
       {editMode ? (
         <Stack spacing={2}>
-          {Object.entries(item).map(([key, value]) => (
-            <TextField
-              key={key}
-              label={key}
-              value={value}
-              onChange={(e) => {
-                setItem((prev) => ({ ...prev, [key]: e.target.value }));
-                setHasChanges(true);
-              }}
-              fullWidth
-            />
-          ))}
-          <Stack>
+          {Object.entries(item)
+            .filter(([key]) => key !== "id")
+            .map(([key, value]) => (
+              <TextField
+                key={key}
+                label={key}
+                value={value}
+                onChange={(e) => {
+                  setItem((prev) => ({ ...prev, [key]: e.target.value }));
+                }}
+                fullWidth
+              />
+            ))}
+          <Stack direction="row" className={cx("buttons-group")}>
             <Button
               className={cx("button")}
               variant="contained"
               color="success"
               onClick={handleSave}
-              disabled={!hasChanges}
+              disabled={JSON.stringify(item) === JSON.stringify(oldItem)}
             >
               Save
             </Button>
