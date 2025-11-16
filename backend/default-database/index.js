@@ -14,7 +14,7 @@ try {
   });
   await pool.query(`DROP TABLE IF EXISTS ${process.env.MYSQL_DEFAULT_TABLE}`);
   await pool.query(`CREATE TABLE ${process.env.MYSQL_DEFAULT_TABLE} (
-    \`id\` INT PRIMARY KEY AUTO_INCREMENT,
+    \`ID\` INT PRIMARY KEY AUTO_INCREMENT,
     \`Brand\` VARCHAR(255),
     \`Model\` VARCHAR(255),
     \`AccelSec\` DECIMAL(5, 2),
