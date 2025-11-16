@@ -80,7 +80,7 @@ export default function DetailPage() {
       <Button
         className={cx("button")}
         variant="outlined"
-        onClick={() => navigate(-1)}
+        onClick={() => navigate(`/${tableName}`)}
       >
         Back
       </Button>
