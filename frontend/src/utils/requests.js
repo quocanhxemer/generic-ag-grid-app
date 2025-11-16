@@ -23,3 +23,8 @@ export const deleteItem = async (tableName, id) => {
   const response = await requests.delete(`/${tableName}/${id}`);
   return response.data;
 };
+
+export const getItemById = async (tableName, id) => {
+  const response = await requests.get(`/${tableName}/${id}`);
+  return response.data;
+};
