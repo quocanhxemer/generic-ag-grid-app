@@ -4,10 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 
-import { Button, TextField } from "@mui/material";
+import { Box, TextField } from "@mui/material";
 
 import { deleteItem, getItems, updateItemById } from "../../utils/requests";
 import useDebounce from "../../hooks/useDebounce";
+
+import classNames from "classnames/bind";
+import styles from "./TablePage.module.css";
+
+const cx = classNames.bind(styles);
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -111,11 +116,6 @@ export default function TablePage() {
     [tableName, debouncedSearch],
   );
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    gridApi.refreshInfiniteCache();
-  };
-
   const handleCellEdit = async (params) => {
     const updatedData = params.data;
     const id = updatedData.id;
@@ -128,8 +128,8 @@ export default function TablePage() {
   };
 
   return (
-    <div style={{ width: "100%", height: "100%" }}>
-      <form onSubmit={handleSearch} style={{ marginBottom: "10px" }}>
+    <div className={cx("main-container")}>
+      <Box className={cx("search-container")}>
         <TextField
           label="Search"
           name="search"
@@ -137,11 +137,7 @@ export default function TablePage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <Button type="submit" variant="contained" color="primary">
-          {" "}
-          Search{" "}
-        </Button>
-      </form>
+      </Box>
       <AgGridReact
         onGridReady={(params) => setGridApi(params.api)}
         columnDefs={columnDefs}
