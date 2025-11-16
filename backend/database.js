@@ -73,66 +73,86 @@ export const addItem = async (tableName, newItem) => {
   return getItemById(tableName, result.insertId);
 };
 
-export const queryItems = async (
-  tableName,
-  option = { search: "", filters: {} },
-) => {
+export const queryItems = async (tableName, option = {}) => {
   // Option.filters in form a Map from column to { filterType, type, filter }
   // OR: to { filterType, operator, conditions: [ { filterType, type, filter }, ... ] }
   // From the IDatasource interface https://www.ag-grid.com/react-data-grid/infinite-scrolling
   // Don't need filterType for now ¯\(o_o)/¯
   const whereClauses = [];
-  const values = [];
-  if (option.filters) {
-    for (const col of Object.keys(option.filters)) {
-      // Validate column name - against maybe SQL injection
-      if (!(await isValidColumn(tableName, col, pool))) {
-        throw new Error(`Invalid column name: ${col}`);
+  const whereValues = [];
+
+  const {
+    offset = 0,
+    limit = 20,
+    filters = {},
+    sort = [],
+    search = "",
+  } = option;
+
+  for (const col of Object.keys(filters)) {
+    // Validate column name - against maybe SQL injection
+    if (!(await isValidColumn(tableName, col, pool))) {
+      throw new Error(`Invalid column name: ${col}`);
+    }
+
+    const filter = filters[col];
+
+    if (filter.conditions) {
+      if (filter.operator !== "AND" && filter.operator !== "OR") {
+        throw new Error(`Unsupported operator: ${filter.operator}`);
       }
 
-      const filter = option.filters[col];
-
-      if (filter.conditions) {
-        if (filter.operator !== "AND" && filter.operator !== "OR") {
-          throw new Error(`Unsupported operator: ${filter.operator}`);
+      const conditionClauses = [];
+      for (const condition of filter.conditions) {
+        const [clause, val] = getWhereClause(condition, col);
+        conditionClauses.push(clause);
+        if (val !== undefined) {
+          whereValues.push(val);
         }
-
-        const conditionClauses = [];
-        for (const condition of filter.conditions) {
-          const [clause, val] = getWhereClause(condition, col);
-          conditionClauses.push(clause);
-          if (val !== undefined) {
-            values.push(val);
-          }
-        }
-
-        whereClauses.push(
-          "(" + conditionClauses.join(` ${filter.operator} `) + ")",
-        );
-        continue;
       }
 
-      const [clause, val] = getWhereClause(filter, col);
-      whereClauses.push(clause);
-      if (val !== undefined) {
-        values.push(val);
-      }
+      whereClauses.push(
+        "(" + conditionClauses.join(` ${filter.operator} `) + ")",
+      );
+      continue;
+    }
+
+    const [clause, val] = getWhereClause(filter, col);
+    whereClauses.push(clause);
+    if (val !== undefined) {
+      whereValues.push(val);
     }
   }
 
-  if (option.search) {
+  // SortModelItem interface from https://www.ag-grid.com/react-data-grid/infinite-scrolling
+  const orderClauses = sort
+    .map((sortItem) => {
+      if (!isValidColumn(tableName, sortItem.colId, pool)) {
+        throw new Error(`Invalid column name: ${sortItem.colId}`);
+      }
+      return `\`${sortItem.colId}\` ${sortItem.sort.toUpperCase()}`;
+    })
+    .join(", ");
+
+  if (search) {
     const searchColumns = (await getColumnNames(tableName, pool)).join(", ");
     whereClauses.push(`CONCAT_WS(' ', ${searchColumns}) LIKE ?`);
-    values.push(`%${option.search}%`);
+    whereValues.push(`%${search}%`);
   }
 
   const whereClause = whereClauses.length
     ? "WHERE " + whereClauses.join(" AND ")
     : "";
 
-  const [items] = await pool.query(`SELECT * FROM ?? ${whereClause}`, [
-    tableName,
-    ...values,
-  ]);
+  const [items] = await pool.query(
+    `
+    SELECT * FROM ?? 
+    ${orderClauses ? `ORDER BY ${orderClauses}` : ""}
+    ${whereClause} 
+    LIMIT ?
+    OFFSET ? 
+    `,
+    [tableName, ...whereValues, limit, offset],
+  );
   return items;
 };
