@@ -34,6 +34,21 @@ export default function TablePage() {
             field: key,
             sortable: true,
             filter: true,
+            filterParams: {
+              filterOptions: [
+                "contains",
+                "notContains",
+                "equals",
+                "notEqual",
+                "startsWith",
+                "endsWith",
+                "blank",
+                "notBlank",
+                "greaterThan",
+                "lessThan",
+              ],
+              maxNumConditions: 4,
+            },
             resizable: true,
             editable: key !== "id",
           }));

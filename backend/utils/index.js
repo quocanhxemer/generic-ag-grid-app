@@ -34,9 +34,9 @@ export const getWhereClause = (filter, col) => {
       return [`(\`${col}\` IS NULL OR \`${col}\` = '')`];
     case "notBlank":
       return [`\`${col}\` IS NOT NULL AND \`${col}\` <> ''`];
-    case "greater_than":
+    case "greaterThan":
       return [`\`${col}\` > ?`, `${filter.filter}`];
-    case "less_than":
+    case "lessThan":
       return [`\`${col}\` < ?`, `${filter.filter}`];
     default:
       throw new Error(`Unsupported operation: ${filter.type}`);
