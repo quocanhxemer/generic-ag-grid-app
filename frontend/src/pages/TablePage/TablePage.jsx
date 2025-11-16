@@ -4,14 +4,21 @@ import { useEffect, useMemo, useState } from "react";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 
+import { Button, TextField } from "@mui/material";
+
 import { deleteItem, getItems } from "../../utils/requests";
+import useDebounce from "../../hooks/useDebounce";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 export default function TablePage() {
   const navigate = useNavigate();
 
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
+
   const [columnDefs, setColumnDefs] = useState([]);
+  const [gridApi, setGridApi] = useState(null);
 
   const { tableName } = useParams();
 
@@ -70,6 +77,7 @@ export default function TablePage() {
           limit: pageSize,
           filters: filterModel,
           sort: sortModel,
+          search: debouncedSearch.trim(),
         };
 
         try {
@@ -84,12 +92,31 @@ export default function TablePage() {
         }
       },
     }),
-    [tableName],
+    [tableName, debouncedSearch],
   );
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    gridApi.refreshInfiniteCache();
+  };
 
   return (
     <div style={{ width: "100%", height: "100%" }}>
+      <form onSubmit={handleSearch} style={{ marginBottom: "10px" }}>
+        <TextField
+          label="Search"
+          name="search"
+          variant="outlined"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <Button type="submit" variant="contained" color="primary">
+          {" "}
+          Search{" "}
+        </Button>
+      </form>
       <AgGridReact
+        onGridReady={(params) => setGridApi(params.api)}
         columnDefs={columnDefs}
         rowModelType="infinite"
         datasource={datasource}
