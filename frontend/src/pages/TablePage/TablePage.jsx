@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 
-import { Box, TextField } from "@mui/material";
+import { Box, Button, TextField, Typography } from "@mui/material";
 
 import { deleteItem, getItems, updateItemById } from "../../utils/requests";
 import useDebounce from "../../hooks/useDebounce";
@@ -33,53 +33,59 @@ export default function TablePage() {
         // Get 1 row to determine columns
         const data = await getItems(tableName, { offset: 0, limit: 1 });
 
-        if (data.length > 0) {
-          const columns = Object.keys(data[0]).map((key) => ({
-            headerName: key,
-            field: key,
-            sortable: true,
-            filter: true,
-            filterParams: {
-              filterOptions: [
-                "contains",
-                "notContains",
-                "equals",
-                "notEqual",
-                "startsWith",
-                "endsWith",
-                "blank",
-                "notBlank",
-                "greaterThan",
-                "lessThan",
-              ],
-              maxNumConditions: 4,
-            },
-            resizable: true,
-            editable: key !== "id",
-          }));
-          columns.unshift({
-            headerName: "Actions",
-            field: "actions",
-            cellRenderer: (params) => (
-              <div>
-                <button
-                  onClick={() => navigate(`/${tableName}/${params.data.id}`)}
-                >
-                  View
-                </button>
-                <button
-                  onClick={async () => {
-                    await deleteItem(tableName, params.data.id);
-                    params.api.refreshInfiniteCache();
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
-            ),
-          });
-          setColumnDefs(columns);
+        if (data.length === 0) {
+          setColumnDefs([]);
+          return;
         }
+
+        const columns = Object.keys(data[0]).map((key) => ({
+          headerName: key,
+          field: key,
+          sortable: true,
+          filter: true,
+          filterParams: {
+            filterOptions: [
+              "contains",
+              "notContains",
+              "equals",
+              "notEqual",
+              "startsWith",
+              "endsWith",
+              "blank",
+              "notBlank",
+              "greaterThan",
+              "lessThan",
+            ],
+            maxNumConditions: 4,
+          },
+          resizable: true,
+          editable: key.toUpperCase() !== "ID",
+        }));
+        columns.unshift({
+          headerName: "Actions",
+          field: "actions",
+          cellRenderer: (params) => (
+            <Box className={cx("actions-cell")}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate(`/${tableName}/${params.data.ID}`)}
+              >
+                View
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={async () => {
+                  await deleteItem(tableName, params.data.ID);
+                  params.api.refreshInfiniteCache();
+                }}
+              >
+                Delete
+              </Button>
+            </Box>
+          ),
+        });
+        setColumnDefs(columns);
       } catch (error) {
         alert("Error loading table data :(");
       }
@@ -118,7 +124,7 @@ export default function TablePage() {
 
   const handleCellEdit = async (params) => {
     const updatedData = params.data;
-    const id = updatedData.id;
+    const id = updatedData.ID;
 
     try {
       await updateItemById(tableName, id, updatedData);
@@ -128,8 +134,11 @@ export default function TablePage() {
   };
 
   return (
-    <div className={cx("main-container")}>
+    <Box className={cx("main-container")}>
       <Box className={cx("search-container")}>
+        <Typography className={cx("table-title")} variant="h4" gutterBottom>
+          Viewing table: {tableName}
+        </Typography>
         <TextField
           label="Search"
           name="search"
@@ -145,6 +154,6 @@ export default function TablePage() {
         datasource={datasource}
         onCellValueChanged={handleCellEdit}
       />
-    </div>
+    </Box>
   );
 }

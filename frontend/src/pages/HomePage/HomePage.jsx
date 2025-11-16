@@ -30,7 +30,7 @@ export default function HomePage() {
         <Typography variant="h5" gutterBottom>
           Enter Table Name
         </Typography>
-        <Box display="flex" gap={2}>
+        <Box className={cx("search-box")} display="flex" gap={2}>
           <TextField
             label="Table Name"
             variant="outlined"
@@ -39,7 +39,12 @@ export default function HomePage() {
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={handleKeyDown}
           />
-          <Button variant="contained" color="primary" onClick={handleSearch}>
+          <Button
+            className={cx("button")}
+            variant="contained"
+            color="primary"
+            onClick={handleSearch}
+          >
             Go
           </Button>
         </Box>

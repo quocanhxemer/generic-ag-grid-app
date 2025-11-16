@@ -4,8 +4,24 @@
   margin: 10px;
 }
 
-.button {
-  margin-bottom: 16px;
+.header-container {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.header-title {
+  text-align: center;
+}
+
+.back-button {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+
+.edit-form {
+  display: grid;
+  gap: 16px;
 }
 
 .buttons-group {

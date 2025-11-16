@@ -6,9 +6,19 @@
   align-items: stretch;
 }
 
+.table-title {
+  text-align: center;
+  margin: 24px;
+}
+
 .search-container {
   padding: 24px;
   width: 100%;
   max-width: 600px;
   margin: auto;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
 }

@@ -50,9 +50,9 @@ export default function DetailPage() {
   const handleSaveAsNewItem = () => {
     const saveAsNew = async () => {
       try {
-        const { id, ...itemWithoutId } = updatedItem;
+        const { ID, ...itemWithoutId } = updatedItem;
         const newItem = await addItem(tableName, itemWithoutId);
-        navigate(`/${tableName}/${newItem.id}`);
+        navigate(`/${tableName}/${newItem.ID}`);
         setEditMode(false);
       } catch (error) {
         alert("Failed to save new item :(");
@@ -77,20 +77,20 @@ export default function DetailPage() {
 
   return (
     <Box className={cx("main-container")}>
-      <Button
-        className={cx("button")}
-        variant="outlined"
-        onClick={() => navigate(`/${tableName}`)}
-      >
-        Back
-      </Button>
-      <Typography variant="h2">
-        Details for {tableName} Item ID: {id}
-      </Typography>
+      <Box className={cx("header-container")} direction="row">
+        <Box className={cx("back-button")}>
+          <Button variant="outlined" onClick={() => navigate(`/${tableName}`)}>
+            Back
+          </Button>
+        </Box>
+        <Typography className={cx("header-title")} variant="h4">
+          Details for {tableName} Item ID: {id}
+        </Typography>
+      </Box>
       {editMode ? (
-        <Stack spacing={2}>
+        <Box className={cx("edit-form")}>
           {Object.entries(updatedItem)
-            .filter(([key]) => key !== "id")
+            .filter(([key]) => key.toUpperCase() !== "ID")
             .map(([key, value]) => (
               <TextField
                 key={key}
@@ -110,7 +110,6 @@ export default function DetailPage() {
             ))}
           <Stack direction="row" className={cx("buttons-group")}>
             <Button
-              className={cx("button")}
               variant="outlined"
               color="primary"
               onClick={handleSaveAsNewItem}
@@ -118,7 +117,6 @@ export default function DetailPage() {
               Save as new item
             </Button>
             <Button
-              className={cx("button")}
               variant="contained"
               color="success"
               onClick={handleSave}
@@ -126,16 +124,11 @@ export default function DetailPage() {
             >
               Save
             </Button>
-            <Button
-              className={cx("button")}
-              variant="outlined"
-              color="error"
-              onClick={handleCancel}
-            >
+            <Button variant="outlined" color="error" onClick={handleCancel}>
               Cancel
             </Button>
           </Stack>
-        </Stack>
+        </Box>
       ) : (
         <>
           <Table>
@@ -151,7 +144,6 @@ export default function DetailPage() {
             </TableBody>
           </Table>
           <Button
-            className={cx("button")}
             variant="contained"
             color="primary"
             onClick={handleEdit}
