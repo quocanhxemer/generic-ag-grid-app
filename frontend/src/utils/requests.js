@@ -33,3 +33,8 @@ export const updateItemById = async (tableName, id, updatedFields) => {
   const response = await requests.put(`/${tableName}/${id}`, updatedFields);
   return response.data;
 };
+
+export const addItem = async (tableName, newItem) => {
+  const response = await requests.post(`/${tableName}`, newItem);
+  return response.data;
+};

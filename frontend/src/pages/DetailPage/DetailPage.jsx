@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getItemById, updateItemById } from "../../utils/requests";
+import { getItemById, updateItemById, addItem } from "../../utils/requests";
 import {
   Box,
   Button,
@@ -47,16 +47,30 @@ export default function DetailPage() {
     setEditMode(true);
   };
 
+  const handleSaveAsNewItem = () => {
+    const saveAsNew = async () => {
+      try {
+        const { id, ...itemWithoutId } = updatedItem;
+        const newItem = await addItem(tableName, itemWithoutId);
+        navigate(`/${tableName}/${newItem.id}`);
+        setEditMode(false);
+      } catch (error) {
+        alert("Failed to save new item :(");
+      }
+    };
+    saveAsNew();
+  };
+
   const handleSave = () => {
     const saveChanges = async () => {
       try {
         setItem(await updateItemById(tableName, id, updatedItem));
+        setEditMode(false);
       } catch (error) {
         alert("Failed to save changes :(");
       }
     };
     saveChanges();
-    setEditMode(false);
   };
 
   const handleCancel = () => setEditMode(false);
@@ -95,6 +109,14 @@ export default function DetailPage() {
               />
             ))}
           <Stack direction="row" className={cx("buttons-group")}>
+            <Button
+              className={cx("button")}
+              variant="outlined"
+              color="primary"
+              onClick={handleSaveAsNewItem}
+            >
+              Save as new item
+            </Button>
             <Button
               className={cx("button")}
               variant="contained"
