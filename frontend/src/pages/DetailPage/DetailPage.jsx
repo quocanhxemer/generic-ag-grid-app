@@ -23,7 +23,7 @@ export default function DetailPage() {
   const navigate = useNavigate();
 
   const [item, setItem] = useState(null);
-  const [oldItem, setOldItem] = useState(null);
+  const [updatedItem, setUpdatedItem] = useState(null);
   const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
@@ -43,17 +43,15 @@ export default function DetailPage() {
   }
 
   const handleEdit = () => {
-    setOldItem(item);
+    setUpdatedItem(item);
     setEditMode(true);
   };
 
   const handleSave = () => {
     const saveChanges = async () => {
       try {
-        const updatedItem = await updateItemById(tableName, id, item);
-        setItem(updatedItem);
+        setItem(await updateItemById(tableName, id, updatedItem));
       } catch (error) {
-        setItem(oldItem);
         alert("Failed to save changes :(");
       }
     };
@@ -77,7 +75,7 @@ export default function DetailPage() {
       </Typography>
       {editMode ? (
         <Stack spacing={2}>
-          {Object.entries(item)
+          {Object.entries(updatedItem)
             .filter(([key]) => key !== "id")
             .map(([key, value]) => (
               <TextField
@@ -85,7 +83,13 @@ export default function DetailPage() {
                 label={key}
                 value={value}
                 onChange={(e) => {
-                  setItem((prev) => ({ ...prev, [key]: e.target.value }));
+                  setUpdatedItem((prev) => ({
+                    ...prev,
+                    [key]:
+                      typeof item[key] === "number"
+                        ? Number(e.target.value) || e.target.value
+                        : e.target.value,
+                  }));
                 }}
                 fullWidth
               />
@@ -96,7 +100,7 @@ export default function DetailPage() {
               variant="contained"
               color="success"
               onClick={handleSave}
-              disabled={JSON.stringify(item) === JSON.stringify(oldItem)}
+              disabled={JSON.stringify(item) === JSON.stringify(updatedItem)}
             >
               Save
             </Button>
