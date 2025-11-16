@@ -147,8 +147,8 @@ export const queryItems = async (tableName, option = {}) => {
   const [items] = await pool.query(
     `
     SELECT * FROM ?? 
-    ${orderClauses ? `ORDER BY ${orderClauses}` : ""}
     ${whereClause} 
+    ${orderClauses ? `ORDER BY ${orderClauses}` : ""}
     LIMIT ?
     OFFSET ? 
     `,
