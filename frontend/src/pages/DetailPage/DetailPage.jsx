@@ -14,7 +14,7 @@ export default function DetailPage() {
       try {
         setItem(await getItemById(tableName, id));
       } catch (error) {
-        console.error("Error fetching item:", error);
+        alert("Can't load item :(");
       }
     };
 

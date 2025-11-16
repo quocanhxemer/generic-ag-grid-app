@@ -6,7 +6,7 @@ import { AgGridReact } from "ag-grid-react";
 
 import { Button, TextField } from "@mui/material";
 
-import { deleteItem, getItems } from "../../utils/requests";
+import { deleteItem, getItems, updateItemById } from "../../utils/requests";
 import useDebounce from "../../hooks/useDebounce";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -35,8 +35,9 @@ export default function TablePage() {
             sortable: true,
             filter: true,
             resizable: true,
+            editable: key !== "id",
           }));
-          columns.push({
+          columns.unshift({
             headerName: "Actions",
             field: "actions",
             cellRenderer: (params) => (
@@ -60,7 +61,7 @@ export default function TablePage() {
           setColumnDefs(columns);
         }
       } catch (error) {
-        console.error("Error loading table data:", error);
+        alert("Error loading table data :(");
       }
     };
     loadColumnsNames();
@@ -87,7 +88,7 @@ export default function TablePage() {
             data.length < pageSize ? startRow + data.length : -1,
           );
         } catch (error) {
-          console.error("Error fetching rows:", error);
+          alert("Error fetching rows :(");
           rowParams.failCallback();
         }
       },
@@ -98,6 +99,17 @@ export default function TablePage() {
   const handleSearch = (e) => {
     e.preventDefault();
     gridApi.refreshInfiniteCache();
+  };
+
+  const handleCellEdit = async (params) => {
+    const updatedData = params.data;
+    const id = updatedData.id;
+
+    try {
+      await updateItemById(tableName, id, updatedData);
+    } catch (error) {
+      alert("Error updating item :(");
+    }
   };
 
   return (
@@ -120,6 +132,7 @@ export default function TablePage() {
         columnDefs={columnDefs}
         rowModelType="infinite"
         datasource={datasource}
+        onCellValueChanged={handleCellEdit}
       />
     </div>
   );
