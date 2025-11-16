@@ -1,0 +1,9 @@
+.main-container {
+  height: 100%;
+  width: 100%;
+}
+
+.button {
+  margin-bottom: 16px;
+  padding: 100px;
+}
