@@ -4,7 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 
-import { Box, Button, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  TextField,
+  Typography,
+} from "@mui/material";
 
 import { deleteItem, getItems, updateItemById } from "../../utils/requests";
 import useDebounce from "../../hooks/useDebounce";
@@ -93,6 +99,11 @@ export default function TablePage() {
     loadColumnsNames();
   }, [tableName, navigate]);
 
+  const defaultColDef = {
+    cellRenderer: ({ value }) =>
+      value === undefined ? <CircularProgress /> : value,
+  };
+
   const datasource = useMemo(
     () => ({
       getRows: async (rowParams) => {
@@ -150,6 +161,7 @@ export default function TablePage() {
       <AgGridReact
         onGridReady={(params) => setGridApi(params.api)}
         columnDefs={columnDefs}
+        defaultColDef={defaultColDef}
         rowModelType="infinite"
         datasource={datasource}
         onCellValueChanged={handleCellEdit}
