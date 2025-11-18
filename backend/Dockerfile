@@ -12,4 +12,4 @@ RUN chmod +x setup_script.sh
 
 EXPOSE 8080
 
-CMD ["./setup_script.sh"]
+CMD ["sh", "-c", "./setup_script.sh"]
