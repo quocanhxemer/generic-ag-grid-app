@@ -148,6 +148,7 @@ export default function TablePage() {
   const handleCellEdit = async (params) => {
     const updatedData = params.data;
     const id = updatedData.ID;
+    const field = params.colDef.field;
 
     try {
       await updateItemById(tableName, id, updatedData);
@@ -155,6 +156,7 @@ export default function TablePage() {
       setToastStatus("success");
       setToastOpen(true);
     } catch (error) {
+      updatedData[field] = params.oldValue;
       setToastMessage("Failed to update item!");
       setToastStatus("error");
       setToastOpen(true);
