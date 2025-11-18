@@ -77,6 +77,7 @@ try {
   }
 } catch (error) {
   console.error("Error loading default data: " + error);
+  process.exit(1);
 } finally {
   await pool.end();
 }
