@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "npx nodemon app.js",
+    "start": "node app.js",
     "generate": "node default-database",
     "format": "npx prettier . --write"
   },
