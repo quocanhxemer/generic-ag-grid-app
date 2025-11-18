@@ -6,7 +6,7 @@ A fullstack application for database tables management. Features include viewing
 - **Express** with MySQL integration.
 - **Docker & Docker Compose**.
 
-# Quick start (Docker)
+# 🚀 Quick start (Docker)
 The easiest way to run the application. This automatically seeds the database with the default table.
 ## 1. Prerequisites
 - [Docker & Docker Compose](https://docs.docker.com/get-started/get-docker/).
@@ -43,7 +43,7 @@ docker-compose up --build
 CMD ["npm", "start"]
 ```
 
-# Manual installations
+# ⚒️ Manual installations
 
 ## 1. Backend setup
 - Navigate to the backend project.
@@ -74,7 +74,7 @@ npm run dev
 ```
 - The application serves at `http://localhost:5173`.
 
-# Overview
+# 📖 Overview
 - **Home page** Search for table name.
 - **Table page** View table information at `/<table-name>`. Update table by directly editing the cells.
 - **Detail page** Detail view for one entry.
