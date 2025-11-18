@@ -66,6 +66,7 @@ export default function DetailPage() {
         setToastStatus("success");
         setToastOpen(true);
       } catch (error) {
+        setUpdatedItem(item);
         setToastMessage("Failed to save as new item!");
         setToastStatus("error");
         setToastOpen(true);
@@ -83,6 +84,7 @@ export default function DetailPage() {
         setToastStatus("success");
         setToastOpen(true);
       } catch (error) {
+        setUpdatedItem(item);
         setToastMessage("Failed to save changes!");
         setToastStatus("error");
         setToastOpen(true);
