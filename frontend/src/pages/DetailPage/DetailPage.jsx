@@ -13,6 +13,8 @@ import {
   Typography,
 } from "@mui/material";
 
+import Toast from "../../components/Toast";
+
 import classNames from "classnames/bind";
 import styles from "./DetailPage.module.css";
 
@@ -21,6 +23,10 @@ const cx = classNames.bind(styles);
 export default function DetailPage() {
   const { tableName, id } = useParams();
   const navigate = useNavigate();
+
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastStatus, setToastStatus] = useState("");
 
   const [item, setItem] = useState(null);
   const [updatedItem, setUpdatedItem] = useState(null);
@@ -31,7 +37,9 @@ export default function DetailPage() {
       try {
         setItem(await getItemById(tableName, id));
       } catch (error) {
-        alert("Can't load item :(");
+        setToastMessage("Failed to load data!");
+        setToastStatus("error");
+        setToastOpen(true);
       }
     };
 
@@ -54,8 +62,13 @@ export default function DetailPage() {
         const newItem = await addItem(tableName, itemWithoutId);
         navigate(`/${tableName}/${newItem.ID}`);
         setEditMode(false);
+        setToastMessage("New item saved successfully!");
+        setToastStatus("success");
+        setToastOpen(true);
       } catch (error) {
-        alert("Failed to save new item :(");
+        setToastMessage("Failed to save as new item!");
+        setToastStatus("error");
+        setToastOpen(true);
       }
     };
     saveAsNew();
@@ -66,8 +79,13 @@ export default function DetailPage() {
       try {
         setItem(await updateItemById(tableName, id, updatedItem));
         setEditMode(false);
+        setToastMessage("Item updated successfully!");
+        setToastStatus("success");
+        setToastOpen(true);
       } catch (error) {
-        alert("Failed to save changes :(");
+        setToastMessage("Failed to save changes!");
+        setToastStatus("error");
+        setToastOpen(true);
       }
     };
     saveChanges();
@@ -77,6 +95,12 @@ export default function DetailPage() {
 
   return (
     <Box className={cx("main-container")}>
+      <Toast
+        open={toastOpen}
+        message={toastMessage}
+        severity={toastStatus}
+        onClose={() => setToastOpen(false)}
+      />
       <Box className={cx("header-container")} direction="row">
         <Box className={cx("back-button")}>
           <Button variant="outlined" onClick={() => navigate(`/${tableName}`)}>

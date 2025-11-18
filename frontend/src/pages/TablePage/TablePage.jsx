@@ -17,6 +17,7 @@ import useDebounce from "../../hooks/useDebounce";
 
 import classNames from "classnames/bind";
 import styles from "./TablePage.module.css";
+import Toast from "../../components/Toast";
 
 const cx = classNames.bind(styles);
 
@@ -27,6 +28,10 @@ export default function TablePage() {
 
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
+
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastStatus, setToastStatus] = useState("");
 
   const [columnDefs, setColumnDefs] = useState([]);
   const [gridApi, setGridApi] = useState(null);
@@ -84,6 +89,9 @@ export default function TablePage() {
                 onClick={async () => {
                   await deleteItem(tableName, params.data.ID);
                   params.api.refreshInfiniteCache();
+                  setToastMessage("Delete item successfully!");
+                  setToastStatus("info");
+                  setToastOpen(true);
                 }}
               >
                 Delete
@@ -93,7 +101,9 @@ export default function TablePage() {
         });
         setColumnDefs(columns);
       } catch (error) {
-        alert("Error loading table data :(");
+        setToastMessage("Failed to load data!");
+        setToastStatus("error");
+        setToastOpen(true);
       }
     };
     loadColumnsNames();
@@ -125,7 +135,9 @@ export default function TablePage() {
             data.length < pageSize ? startRow + data.length : -1,
           );
         } catch (error) {
-          alert("Error fetching rows :(");
+          setToastMessage("Failed to load data!");
+          setToastStatus("error");
+          setToastOpen(true);
           rowParams.failCallback();
         }
       },
@@ -139,13 +151,24 @@ export default function TablePage() {
 
     try {
       await updateItemById(tableName, id, updatedData);
+      setToastMessage("Successfully updated item!");
+      setToastStatus("success");
+      setToastOpen(true);
     } catch (error) {
-      alert("Error updating item :(");
+      setToastMessage("Failed to update item!");
+      setToastStatus("error");
+      setToastOpen(true);
     }
   };
 
   return (
     <Box className={cx("main-container")}>
+      <Toast
+        open={toastOpen}
+        message={toastMessage}
+        severity={toastStatus}
+        onClose={() => setToastOpen(false)}
+      />
       <Box className={cx("search-container")}>
         <Typography className={cx("table-title")} variant="h4" gutterBottom>
           Viewing table: {tableName}
