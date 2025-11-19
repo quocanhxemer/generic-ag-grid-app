@@ -1,6 +1,8 @@
 # React - Express Data Manager
 A fullstack application for database tables management. Features include viewing, creating, editing and deleting table entries.
 
+[Demo video](https://drive.google.com/file/d/1V3dqsJ3-g0chTO-p0f522FkNyI932s-Y/view?usp=sharing)
+
 ## Built with
 - **React** with [AG Grid](https://www.ag-grid.com/).
 - **Express** with MySQL integration.
