@@ -56,7 +56,7 @@ npm install
 - Create a `.env` file matching your MySQL configuration ([see above](#2-create-an-environment-file)).
 - *Optional -* Seed data.
 ```bash
-`npm run generate`
+npm run generate
 ```
 - Start the server.
 ```bash
